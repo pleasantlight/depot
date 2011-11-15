@@ -44,7 +44,8 @@ class LineItemsController < ApplicationController
     @cart_should_show = @cart.line_items.empty?
     product = Product.find(params[:product_id])
     @line_item = @cart.add_product(product.id)
-
+    @line_item.price = product.price
+    
     respond_to do |format|
       if @line_item.save
         format.html { redirect_to store_url }
