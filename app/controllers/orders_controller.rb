@@ -54,6 +54,7 @@ class OrdersController < ApplicationController
       if @order.save
         Cart.destroy(session[:cart_id])
         session[:cart_id] = nil
+        OrderNotifier.received(@order).deliver
         format.html { redirect_to store_url, notice: 'Thank you for your order.' }
         format.json { render json: @order, status: :created, location: @order }
       else
@@ -68,9 +69,13 @@ class OrdersController < ApplicationController
   # PUT /orders/1.json
   def update
     @order = Order.find(params[:id])
-
+    original_ship_date = @order.ship_date
+    
     respond_to do |format|
       if @order.update_attributes(params[:order])
+        if @order.ship_date != original_ship_date
+          OrderNotifier.shipped(@order).deliver
+        end
         format.html { redirect_to @order, notice: 'Order was successfully updated.' }
         format.json { head :ok }
       else
